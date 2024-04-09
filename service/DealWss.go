@@ -155,6 +155,9 @@ func HandleMes(clientMes model.Message, conn *websocket.Conn) {
 			client.ChatDate = time.Now()
 			client.MatchTime = int64(client.ChatDate.Sub(client.MatchDate).Seconds())
 		}
+		fmt.Println("global.UserMap[conn].MatchTime:", global.UserMap[conn].MatchTime)
+		fmt.Println("global match time", global.UserMap[conn].MatchTime)
+		fmt.Println("now time", time.Now())
 		global.UserMapMutex.Unlock()
 		userEvent := &model.UserEvent{}
 		userEvent.EventType = 3
