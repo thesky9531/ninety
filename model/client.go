@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/gorilla/websocket"
+	"time"
 )
 
 // 前后端通讯消息
@@ -24,4 +25,8 @@ type Client struct {
 	MatchType   string
 	RoomID      int
 	Conn        *websocket.Conn
+	MatchDate   time.Time
+	MatchTime   int64
+	ChatDate    time.Time
+	ChatTime    int64
 }

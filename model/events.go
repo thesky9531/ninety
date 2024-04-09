@@ -16,4 +16,6 @@ type UserEvent struct {
 	ActivityId      int64        `json:"activity_id" db:"activity_id"`
 	EventTime       sql.NullTime `json:"event_time" db:"event_time"`
 	Duration        int64        `json:"duration" db:"duration"`
+	UserGender      string       `json:"userGender" gorm:"-"`
+	MatchGender     string       `json:"matchGender" gorm:"-"`
 }

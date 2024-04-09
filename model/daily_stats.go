@@ -31,4 +31,6 @@ type DailyStats struct {
 	ChatTime40Seconds     int     `gorm:"column:chat_time_40_seconds" json:"chat_time_40_seconds,omitempty"`
 	ChatTime60Seconds     int     `gorm:"column:chat_time_60_seconds" json:"chat_time_60_seconds,omitempty"`
 	ChatTime90Seconds     int     `gorm:"column:chat_time_90_seconds" json:"chat_time_90_seconds,omitempty"`
+	ChatTimeSum           int64   `db:"chat_time_sum" json:"chatTimeSum,omitempty"`
+	WaitTimeSum           int64   `db:"wait_time_sum" json:"waitTimeSum,omitempty"`
 }

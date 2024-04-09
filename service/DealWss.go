@@ -7,6 +7,7 @@ import (
 	"ninety/core"
 	"ninety/global"
 	"ninety/model"
+	"time"
 )
 
 func DealWss(conn *websocket.Conn) {
@@ -47,9 +48,9 @@ func DealWss(conn *websocket.Conn) {
 							continue
 						}
 						global.DRooms[global.UserMap[conn].RoomID][i].Conn.WriteMessage(1, mesData)
-						if _, ok := global.UserMap[conn]; ok {
-							delete(global.UserMap, conn)
-						}
+						//if _, ok := global.UserMap[conn]; ok {
+						//	delete(global.UserMap, conn)
+						//}
 					}
 				}
 			case global.UserMap[conn].MatchType == "mmm" || global.UserMap[conn].MatchType == "fmf":
@@ -65,9 +66,9 @@ func DealWss(conn *websocket.Conn) {
 							continue
 						}
 						global.SRooms[global.UserMap[conn].RoomID][i].Conn.WriteMessage(1, mesData)
-						if _, ok := global.UserMap[conn]; ok {
-							delete(global.UserMap, conn)
-						}
+						//if _, ok := global.UserMap[conn]; ok {
+						//	delete(global.UserMap, conn)
+						//}
 					}
 				}
 			}
@@ -82,7 +83,15 @@ func DealWss(conn *websocket.Conn) {
 					delete(global.SRooms, global.UserMap[conn].RoomID)
 				}
 			}
-
+			userEvent := &model.UserEvent{}
+			userEvent.EventType = 4
+			userEvent.UserId = global.UserMap[conn].UserID
+			userEvent.EventTime.Time = time.Now()
+			userEvent.DeviceId = "unknown"
+			userEvent.EventProperties = "user leave"
+			userEvent.Duration = time.Now().Sub(global.UserMap[conn].MatchDate).Milliseconds()
+			userEvent.ActivityId = 1
+			CreateEvent(userEvent)
 			fmt.Println("conn.ReadMessage err:", err)
 			return
 		}
@@ -97,7 +106,95 @@ func DealWss(conn *websocket.Conn) {
 				fmt.Println("json.Unmarshal(p,&clientMes) err...")
 			}
 			//调用处理信息函数
-			core.HandleMes(clientMes, conn)
+			HandleMes(clientMes, conn)
 		}
+	}
+}
+
+// 处理信息函数
+func HandleMes(clientMes model.Message, conn *websocket.Conn) {
+	fmt.Println("HandleMes...")
+	//根据mesType进入下一步流程
+	switch clientMes.MesType {
+	case model.SIGNAL_TYPE_JOIN:
+		fmt.Println("MesType-join...")
+		//调用userJoin函数
+		core.UserJoin(clientMes, conn)
+		// 开始匹配
+		global.UserMapMutex.Lock()
+		if client, exist := global.UserMap[conn]; exist {
+			client.MatchDate = time.Now()
+		}
+		global.UserMapMutex.Unlock()
+		userEvent := &model.UserEvent{}
+		userEvent.EventType = 2
+		userEvent.UserId = global.UserMap[conn].UserID
+		userEvent.EventTime.Time = time.Now()
+		userEvent.DeviceId = "unknown"
+		userEvent.EventProperties = "user join"
+		userEvent.Duration = 0
+		userEvent.ActivityId = 1
+		userEvent.UserGender = global.UserMap[conn].UserGender
+		userEvent.MatchGender = global.UserMap[conn].MatchGender
+		CreateEvent(userEvent)
+	case model.SIGNAL_TYPE_CANCEL:
+		fmt.Println("MesType-cancel...")
+		//调用userCancel函数
+		core.UserCancel(clientMes)
+	case model.SIGNAL_TYPE_LEAVE:
+		fmt.Println("MesType-leave...")
+		//调用userLeave函数
+		//userLeave(mes, conn)
+	case model.SIGNAL_TYPE_OFFER:
+		fmt.Println("MesType-offer...")
+		//调用tansoffer函数
+		core.TransOffer(clientMes, conn)
+		// 匹配成功
+		global.UserMapMutex.Lock()
+		if client, exist := global.UserMap[conn]; exist {
+			client.ChatDate = time.Now()
+			client.MatchTime = client.ChatDate.Sub(client.MatchDate).Milliseconds()
+		}
+		global.UserMapMutex.Unlock()
+		userEvent := &model.UserEvent{}
+		userEvent.EventType = 3
+		userEvent.UserId = global.UserMap[conn].UserID
+		userEvent.EventTime.Time = time.Now()
+		userEvent.DeviceId = "unknown"
+		userEvent.EventProperties = "match success"
+		userEvent.Duration = global.UserMap[conn].MatchTime
+		userEvent.ActivityId = 1
+		userEvent.UserGender = global.UserMap[conn].UserGender
+		userEvent.MatchGender = global.UserMap[conn].MatchGender
+		CreateEvent(userEvent)
+	case model.SIGNAL_TYPE_ANSWER:
+		fmt.Println("MesType-answer...")
+		//调用tansanswer函数
+		core.TransAnswer(clientMes, conn)
+		// 匹配成功
+		global.UserMapMutex.Lock()
+		if client, exist := global.UserMap[conn]; exist {
+			client.ChatDate = time.Now()
+			client.MatchTime = client.ChatDate.Sub(client.MatchDate).Milliseconds()
+		}
+		global.UserMapMutex.Unlock()
+		userEvent := &model.UserEvent{}
+		userEvent.EventType = 3
+		userEvent.UserId = global.UserMap[conn].UserID
+		userEvent.EventTime.Time = time.Now()
+		userEvent.DeviceId = "unknown"
+		userEvent.EventProperties = "match success"
+		userEvent.Duration = global.UserMap[conn].MatchTime
+		userEvent.ActivityId = 1
+		userEvent.UserGender = global.UserMap[conn].UserGender
+		userEvent.MatchGender = global.UserMap[conn].MatchGender
+		CreateEvent(userEvent)
+	case model.SIGNAL_TYPE_CANDIDATE:
+		fmt.Println("MesType-candidate...")
+		//调用tanscandidate函数
+		core.TransCandidate(clientMes, conn)
+	default:
+		fmt.Println("MesType-unknow...")
+		return
 	}
 }

@@ -3,10 +3,12 @@ package global
 import (
 	"github.com/gorilla/websocket"
 	"ninety/model"
+	"sync"
 )
 
 // 设置用户map，可通过用户连接找到用户信息
 var UserMap = make(map[*websocket.Conn]model.Client)
+var UserMapMutex sync.Mutex
 
 // 设置房间map
 var DRooms = make(map[int][]model.Client)
