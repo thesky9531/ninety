@@ -12,7 +12,7 @@ import (
 
 func DealWss(conn *websocket.Conn) {
 	// todo: 避免同时操作map，需要加锁
-	global.UserMap[conn] = model.Client{}
+	global.UserMap[conn] = &model.Client{}
 	//客户端退出，删除连接
 	defer func() {
 		if _, ok := global.UserMap[conn]; ok {
@@ -152,7 +152,7 @@ func HandleMes(clientMes model.Message, conn *websocket.Conn) {
 		// 匹配成功
 		global.UserMapMutex.Lock()
 		if client, exist := global.UserMap[conn]; exist {
-			client.ChatDate = time.Now()
+			global.UserMap[conn].ChatDate = time.Now()
 			client.MatchTime = int64(client.ChatDate.Sub(client.MatchDate).Seconds())
 		}
 		fmt.Println("global.UserMap[conn].MatchTime:", global.UserMap[conn].MatchTime)

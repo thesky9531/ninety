@@ -51,7 +51,7 @@ func UserJoin(clientMes model.Message, conn *websocket.Conn) {
 
 	//调用 ClientManage 函数，将client存入相应的map中
 	ClientManage(&client)
-	global.UserMap[conn] = client
+	global.UserMap[conn] = &client
 
 	//根据matchtype确认用户所在房间人数，判断是否需要发送通知
 	if client.MatchType == "mmf" || client.MatchType == "fmm" {
