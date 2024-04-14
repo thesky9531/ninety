@@ -86,10 +86,16 @@ func DealWss(conn *websocket.Conn) {
 			userEvent := &model.UserEvent{}
 			userEvent.EventType = 4
 			userEvent.UserId = global.UserMap[conn].UserID
+			if global.UserMap[conn].ChatDate.IsZero() {
+				userEvent.IsChat = false
+				userEvent.Duration = int64(time.Now().Sub(global.UserMap[conn].MatchDate).Seconds())
+			} else {
+				userEvent.IsChat = true
+				userEvent.Duration = int64(time.Now().Sub(global.UserMap[conn].ChatDate).Seconds())
+			}
 			userEvent.EventTime.Time = time.Now()
 			userEvent.DeviceId = "unknown"
 			userEvent.EventProperties = "user leave"
-			userEvent.Duration = int64(time.Now().Sub(global.UserMap[conn].MatchDate).Seconds())
 			userEvent.ActivityId = 1
 			CreateEvent(userEvent)
 			fmt.Println("conn.ReadMessage err:", err)
@@ -123,6 +129,7 @@ func HandleMes(clientMes model.Message, conn *websocket.Conn) {
 		// 开始匹配
 		global.UserMapMutex.Lock()
 		if client, exist := global.UserMap[conn]; exist {
+			// 客户端的匹配时间更新为当前时间
 			client.MatchDate = time.Now()
 		}
 		global.UserMapMutex.Unlock()

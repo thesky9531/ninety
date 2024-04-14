@@ -66,7 +66,7 @@ func CreateEvent(eventReq *model.UserEvent) error {
 		if int(eventReq.Duration) > dailyStat.MaxWaitTime {
 			dailyStat.MaxWaitTime = int(eventReq.Duration)
 		}
-		if int(eventReq.Duration) < dailyStat.MinMatchTime {
+		if int(eventReq.Duration) < dailyStat.MinMatchTime && int(eventReq.Duration) > 0 {
 			dailyStat.MinMatchTime = int(eventReq.Duration)
 		}
 		dailyStat.AvgMatchTime = float64(dailyStat.WaitTimeSum) / float64(dailyStat.TotalSuccesses)
@@ -90,32 +90,59 @@ func CreateEvent(eventReq *model.UserEvent) error {
 		}
 
 	case 4:
-		dailyStat.ChatTimeSum += eventReq.Duration
-		if int(eventReq.Duration) > dailyStat.MaxChatTime {
-			dailyStat.MaxChatTime = int(eventReq.Duration)
+		if eventReq.IsChat {
+			dailyStat.ChatTimeSum += eventReq.Duration
+			if int(eventReq.Duration) > dailyStat.MaxChatTime {
+				dailyStat.MaxChatTime = int(eventReq.Duration)
+			}
+			if int(eventReq.Duration) < dailyStat.MinChatTime {
+				dailyStat.MinChatTime = int(eventReq.Duration)
+			}
+			dailyStat.AvgChatTime = float64(dailyStat.ChatTimeSum) / float64(dailyStat.TotalSuccesses)
+			if eventReq.Duration > 5 {
+				dailyStat.ChatTime5Seconds++
+			}
+			if eventReq.Duration > 10 {
+				dailyStat.ChatTime10Seconds++
+			}
+			if eventReq.Duration > 20 {
+				dailyStat.ChatTime20Seconds++
+			}
+			if eventReq.Duration > 40 {
+				dailyStat.ChatTime40Seconds++
+			}
+			if eventReq.Duration > 60 {
+				dailyStat.ChatTime60Seconds++
+			}
+			if eventReq.Duration > 80 {
+				dailyStat.ChatTime90Seconds++
+			}
+		} else {
+			dailyStat.WaitTimeSum += eventReq.Duration
+			dailyStat.AvgMatchTime = float64(dailyStat.WaitTimeSum) / float64(dailyStat.TotalSuccesses)
+			if int(eventReq.Duration) > dailyStat.MaxWaitTime {
+				dailyStat.MaxWaitTime = int(eventReq.Duration)
+			}
+			if eventReq.Duration > 5 {
+				dailyStat.WaitTime5Seconds++
+			}
+			if eventReq.Duration > 10 {
+				dailyStat.WaitTime10Seconds++
+			}
+			if eventReq.Duration > 20 {
+				dailyStat.WaitTime20Seconds++
+			}
+			if eventReq.Duration > 40 {
+				dailyStat.WaitTime40Seconds++
+			}
+			if eventReq.Duration > 60 {
+				dailyStat.WaitTime60Seconds++
+			}
+			if eventReq.Duration > 80 {
+				dailyStat.WaitTime90Seconds++
+			}
 		}
-		if int(eventReq.Duration) < dailyStat.MinChatTime {
-			dailyStat.MinChatTime = int(eventReq.Duration)
-		}
-		dailyStat.AvgChatTime = float64(dailyStat.ChatTimeSum) / float64(dailyStat.TotalSuccesses)
-		if eventReq.Duration > 5 {
-			dailyStat.ChatTime5Seconds++
-		}
-		if eventReq.Duration > 10 {
-			dailyStat.ChatTime10Seconds++
-		}
-		if eventReq.Duration > 20 {
-			dailyStat.ChatTime20Seconds++
-		}
-		if eventReq.Duration > 40 {
-			dailyStat.ChatTime40Seconds++
-		}
-		if eventReq.Duration > 60 {
-			dailyStat.ChatTime60Seconds++
-		}
-		if eventReq.Duration > 80 {
-			dailyStat.ChatTime90Seconds++
-		}
+
 	}
 
 	if err := dao.UpdateDailyStat(dailyStat); err != nil {

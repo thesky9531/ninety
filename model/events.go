@@ -18,4 +18,5 @@ type UserEvent struct {
 	Duration        int64        `json:"duration" db:"duration"`
 	UserGender      string       `json:"userGender" gorm:"-"`
 	MatchGender     string       `json:"matchGender" gorm:"-"`
+	IsChat          bool         `json:"is_chat" db:"is_chat"` // 是否是聊天事件
 }
