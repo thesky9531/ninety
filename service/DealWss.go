@@ -113,6 +113,24 @@ func DealWss(conn *websocket.Conn) {
 			}
 			//调用处理信息函数
 			HandleMes(clientMes, conn)
+			if clientMes.MesType == model.SIGNAL_TYPE_CANCEL {
+				userEvent := &model.UserEvent{}
+				userEvent.EventType = 4
+				userEvent.UserId = global.UserMap[conn].UserID
+				if global.UserMap[conn].ChatDate.IsZero() {
+					userEvent.IsChat = false
+					userEvent.Duration = int64(time.Now().Sub(global.UserMap[conn].MatchDate).Seconds())
+				} else {
+					userEvent.IsChat = true
+					userEvent.Duration = int64(time.Now().Sub(global.UserMap[conn].ChatDate).Seconds())
+				}
+				userEvent.EventTime.Time = time.Now()
+				userEvent.DeviceId = "unknown"
+				userEvent.EventProperties = "user leave"
+				userEvent.ActivityId = 1
+				CreateEvent(userEvent)
+				return
+			}
 		}
 	}
 }

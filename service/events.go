@@ -66,7 +66,7 @@ func CreateEvent(eventReq *model.UserEvent) error {
 		if int(eventReq.Duration) > dailyStat.MaxWaitTime {
 			dailyStat.MaxWaitTime = int(eventReq.Duration)
 		}
-		if int(eventReq.Duration) < dailyStat.MinMatchTime && int(eventReq.Duration) > 0 {
+		if int(eventReq.Duration) < dailyStat.MinMatchTime || dailyStat.MinMatchTime == 0 {
 			dailyStat.MinMatchTime = int(eventReq.Duration)
 		}
 		dailyStat.AvgMatchTime = float64(dailyStat.WaitTimeSum) / float64(dailyStat.TotalSuccesses)
@@ -95,7 +95,7 @@ func CreateEvent(eventReq *model.UserEvent) error {
 			if int(eventReq.Duration) > dailyStat.MaxChatTime {
 				dailyStat.MaxChatTime = int(eventReq.Duration)
 			}
-			if int(eventReq.Duration) < dailyStat.MinChatTime {
+			if int(eventReq.Duration) < dailyStat.MinChatTime || dailyStat.MinChatTime == 0 {
 				dailyStat.MinChatTime = int(eventReq.Duration)
 			}
 			dailyStat.AvgChatTime = float64(dailyStat.ChatTimeSum) / float64(dailyStat.TotalSuccesses)
